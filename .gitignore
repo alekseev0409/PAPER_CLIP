@@ -1,0 +1,7 @@
+paperclip.tar.gz
+paperclip/.env
+paperclip/node_modules/
+paperclip/.pnpm-store/
+paperclip-startup.log
+.bin/
+pnpm
