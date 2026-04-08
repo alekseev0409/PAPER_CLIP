@@ -7,6 +7,7 @@ import { addAllowedHostname } from "./commands/allowed-hostname.js";
 import { heartbeatRun } from "./commands/heartbeat-run.js";
 import { runCommand } from "./commands/run.js";
 import { bootstrapCeoInvite } from "./commands/auth-bootstrap-ceo.js";
+import { createManualUser, setManualUserPassword } from "./commands/auth-manual-user.js";
 import { dbBackupCommand } from "./commands/db-backup.js";
 import { registerContextCommands } from "./commands/client/context.js";
 import { registerCompanyCommands } from "./commands/client/company.js";
@@ -158,6 +159,29 @@ auth
   .option("--expires-hours <hours>", "Invite expiration window in hours", (value) => Number(value))
   .option("--base-url <url>", "Public base URL used to print invite link")
   .action(bootstrapCeoInvite);
+
+auth
+  .command("create-user")
+  .description("Create a user manually when public sign-up is disabled")
+  .requiredOption("--email <email>", "User email")
+  .option("--name <name>", "Display name")
+  .option("--password <password>", "Initial password (generated automatically if omitted)")
+  .option("--db-url <url>", "Explicit database URL override")
+  .option("-c, --config <path>", "Path to config file")
+  .option("-d, --data-dir <path>", DATA_DIR_OPTION_HELP)
+  .option("--json", "Print created user and password as JSON")
+  .action(createManualUser);
+
+auth
+  .command("set-user-password")
+  .description("Set or rotate a user's password manually")
+  .requiredOption("--email <email>", "User email")
+  .option("--password <password>", "New password (generated automatically if omitted)")
+  .option("--db-url <url>", "Explicit database URL override")
+  .option("-c, --config <path>", "Path to config file")
+  .option("-d, --data-dir <path>", DATA_DIR_OPTION_HELP)
+  .option("--json", "Print resulting password as JSON")
+  .action(setManualUserPassword);
 
 registerClientAuthCommands(auth);
 

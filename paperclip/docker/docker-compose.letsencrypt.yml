@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: paperclip
+      POSTGRES_PASSWORD: paperclip
+      POSTGRES_DB: paperclip
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperclip -d paperclip"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://paperclip:paperclip@db:5432/paperclip
+      PORT: "3100"
+      HOST: "0.0.0.0"
+      SERVE_UI: "true"
+      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "public"
+      PAPERCLIP_AUTH_DISABLE_SIGN_UP: "true"
+      PAPERCLIP_ANY_USER_CAN_CREATE_COMPANY: "true"
+      PAPERCLIP_PUBLIC_URL: "https://${DOMAIN:?Set DOMAIN}"
+      BETTER_AUTH_BASE_URL: "https://${DOMAIN:?Set DOMAIN}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set}"
+      PAPERCLIP_AGENT_JWT_SECRET: "${PAPERCLIP_AGENT_JWT_SECRET:?PAPERCLIP_AGENT_JWT_SECRET must be set}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+    volumes:
+      - paperclip-data:/paperclip
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: "${DOMAIN:?Set DOMAIN}"
+    volumes:
+      - ./nginx-letsencrypt.bootstrap.conf.template:/templates/nginx-letsencrypt.bootstrap.conf.template:ro
+      - ./nginx-letsencrypt.conf.template:/templates/nginx-letsencrypt.conf.template:ro
+      - ./nginx-letsencrypt-entrypoint.sh:/docker-entrypoint.d/99-paperclip-letsencrypt.sh:ro
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    command: ["/bin/sh", "/docker-entrypoint.d/99-paperclip-letsencrypt.sh"]
+    depends_on:
+      - server
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+
+volumes:
+  pgdata:
+  paperclip-data:
+  letsencrypt:
+  certbot-webroot:

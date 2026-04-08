@@ -21,6 +21,7 @@ export type HealthStatus = {
   bootstrapStatus?: "ready" | "bootstrap_pending";
   bootstrapInviteActive?: boolean;
   features?: {
+    signUpEnabled?: boolean;
     companyDeletionEnabled?: boolean;
   };
   devServer?: DevServerHealthStatus;

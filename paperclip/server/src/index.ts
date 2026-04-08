@@ -537,6 +537,7 @@ export async function startServer(): Promise<StartedServer> {
     allowedHostnames: config.allowedHostnames,
     bindHost: config.host,
     authReady,
+    authDisableSignUp: config.authDisableSignUp,
     companyDeletionEnabled: config.companyDeletionEnabled,
     anyUserCanCreateCompany: config.anyUserCanCreateCompany,
     betterAuthHandler,
